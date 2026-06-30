@@ -11,7 +11,37 @@
     "start": "electron-vite preview",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
-    "typecheck": "npm run typecheck:node && npm run typecheck:web"
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "dist": "npm run build && electron-builder --publish always",
+    "dist:win": "npm run build && electron-builder --win --publish always",
+    "dist:mac": "npm run build && electron-builder --mac --publish always",
+    "dist:linux": "npm run build && electron-builder --linux --publish always"
+  },
+  "build": {
+    "appId": "com.yashuppot.mapitout",
+    "productName": "MapItOut",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "yashuppot",
+      "repo": "MapItOut"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
   },
   "dependencies": {
     "@tldraw/assets": "^5.1.1",
@@ -28,6 +58,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",
     "electron": "^42.5.0",
+    "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "typescript": "^6.0.3",
     "vite": "^7.3.6"
