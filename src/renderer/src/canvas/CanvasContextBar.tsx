@@ -10,7 +10,9 @@ function useEditorValue<T>(editor: Editor, compute: () => T): T {
   const [value, setValue] = useState<T>(compute)
   useEffect(() => {
     setValue(compute())
-    return editor.store.listen(() => setValue(compute()), { scope: 'session', source: 'all' })
+    const unDoc = editor.store.listen(() => setValue(compute()), { scope: 'document', source: 'all' })
+    const unSess = editor.store.listen(() => setValue(compute()), { scope: 'session', source: 'all' })
+    return () => { unDoc(); unSess() }
   }, [editor])
   return value
 }
@@ -51,9 +53,7 @@ export function CanvasContextBar({ editor }: Props): React.ReactElement | null {
 
   const handleUnlinkNote = (): void => {
     if (!linkable) return
-    const nextMeta = { ...linkable.meta }
-    delete (nextMeta as Record<string, unknown>).noteId
-    editor.updateShape({ id: linkable.id, type: linkable.type, meta: nextMeta })
+    editor.updateShape({ id: linkable.id, type: linkable.type, meta: { ...linkable.meta, noteId: null } })
   }
 
   return (

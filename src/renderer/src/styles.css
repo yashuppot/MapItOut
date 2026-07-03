@@ -251,6 +251,7 @@ button {
   flex: 1;
   min-height: 0;
   position: relative;
+  isolation: isolate;
 }
 
 .canvas-toolbar {

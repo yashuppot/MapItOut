@@ -14,7 +14,7 @@ import {
 import 'tldraw/tldraw.css'
 import { getAssetUrlsByImport } from '@tldraw/assets/imports.vite'
 import { useApp } from '../store'
-import { NoteLinkShapeUtil } from './shapes/NoteLinkShape'
+import { NoteLinkShapeUtil, type NoteLinkShape } from './shapes/NoteLinkShape'
 import { CanvasLinkShapeUtil } from './shapes/CanvasLinkShape'
 import { vaultAssetStore } from './assetStore'
 import { CanvasToolbar } from './CanvasToolbar'
@@ -88,6 +88,7 @@ function CanvasInstance({ id }: { id: string }): React.ReactElement {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current)
       if (unlistenRef.current) unlistenRef.current()
+      useApp.getState().registerNoteIdPatcher(null)
     }
   }, [])
 
@@ -102,6 +103,18 @@ function CanvasInstance({ id }: { id: string }): React.ReactElement {
     unlistenRef.current = ed.store.listen(save, {
       scope: 'document',
       source: 'user'
+    })
+    useApp.getState().registerNoteIdPatcher((oldId, newId) => {
+      for (const shape of ed.getCurrentPageShapes()) {
+        if (shape.type === 'note-link') {
+          const nl = shape as NoteLinkShape
+          if (nl.props.noteId === oldId) {
+            ed.updateShape({ id: nl.id, type: 'note-link', props: { ...nl.props, noteId: newId } })
+          }
+        } else if ((shape.meta?.noteId as string | undefined) === oldId) {
+          ed.updateShape({ id: shape.id, type: shape.type, meta: { ...shape.meta, noteId: newId } })
+        }
+      }
     })
     setEditor(ed)
   }

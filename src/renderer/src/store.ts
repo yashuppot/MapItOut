@@ -7,10 +7,12 @@ interface AppState {
   activeCanvasId: string | null
   openNoteId: string | null
   ready: boolean
+  _patchNoteId: ((oldId: string, newId: string) => void) | null
 
   init: () => Promise<void>
   chooseVault: () => Promise<void>
   refreshIndex: () => Promise<void>
+  registerNoteIdPatcher: (fn: ((oldId: string, newId: string) => void) | null) => void
 
   createCanvas: (title: string) => Promise<VaultEntryMeta>
   openCanvas: (id: string) => void
@@ -28,6 +30,7 @@ export const useApp = create<AppState>((set, get) => ({
   activeCanvasId: null,
   openNoteId: null,
   ready: false,
+  _patchNoteId: null,
 
   init: async () => {
     const vault = await window.api.vault.current()
@@ -58,6 +61,8 @@ export const useApp = create<AppState>((set, get) => ({
       openNoteId: null
     })
   },
+
+  registerNoteIdPatcher: (fn) => set({ _patchNoteId: fn }),
 
   refreshIndex: async () => {
     if (!get().vault.path) return
@@ -98,6 +103,7 @@ export const useApp = create<AppState>((set, get) => ({
 
   renameNote: async (id: string, title: string) => {
     const newId = await window.api.note.rename(id, title)
+    get()._patchNoteId?.(id, newId)
     if (get().openNoteId === id) set({ openNoteId: newId })
     await get().refreshIndex()
   }
